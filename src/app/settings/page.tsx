@@ -48,10 +48,10 @@ export default function SettingsPage() {
 
         if (!silent) {
           setSyncStatus("success");
-          setTimeout(() => setSyncStatus("idle"), 3000);
         } else {
           setSyncStatus("idle");
         }
+
       }
     } catch (e) {
       console.error(e);
@@ -75,11 +75,9 @@ export default function SettingsPage() {
         });
         if (res.ok) {
           setSyncStatus("done"); // "Đã ghi vào Google Sheet"
-          setTimeout(() => {
-            setSyncStatus("idle");
-            fetchData(true); // Silent refresh
-          }, 3000);
+          fetchData(true); // Silent refresh
         } else {
+
           setSyncStatus("idle");
         }
       } catch (e) {

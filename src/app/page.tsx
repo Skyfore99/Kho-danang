@@ -66,10 +66,10 @@ export default function Home() {
         
         if (!silent) {
           setSyncStatus("success");
-          setTimeout(() => setSyncStatus("idle"), 3000);
         } else {
           setSyncStatus("idle");
         }
+
       }
     } catch (e) {
       console.error(e);
@@ -105,11 +105,9 @@ export default function Home() {
         
         if (res.ok) {
           setSyncStatus("done"); // "Đã ghi vào Google Sheet"
-          setTimeout(() => {
-            setSyncStatus("idle");
-            fetchData(true); // Silent refresh in background to confirm server state
-          }, 3000);
+          fetchData(true); // Silent refresh in background
         } else {
+
           setSyncStatus("idle");
         }
       } catch (e) {

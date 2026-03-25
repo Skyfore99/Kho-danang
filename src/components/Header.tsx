@@ -14,9 +14,10 @@ export default function Header({ status, onSync }: HeaderProps) {
       case "saving": return { text: "Đã lưu, đợi đồng bộ", icon: Clock, spin: false };
       case "queued": return { text: "Đang ở hàng chờ đợi đồng bộ", icon: RefreshCw, spin: true };
       case "done": return { text: "Đã ghi vào Google Sheet", icon: Cloud, spin: false };
-      default: return null;
+      default: return { text: "Đã đồng bộ", icon: CheckCircle2, spin: false };
     }
   };
+
 
   const config = getStatusConfig();
   const isLoading = status === "loading" || status === "saving" || status === "queued";
