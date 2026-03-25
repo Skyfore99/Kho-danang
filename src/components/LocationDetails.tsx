@@ -115,7 +115,25 @@ export default function LocationDetails({ locId, skus, onClose }: LocationDetail
           .close-btn:active {
             background: #e2e8f0;
           }
+          .details-list {
+            max-height: 440px; /* Approximately 3 items tall */
+            overflow-y: auto;
+            padding-right: 4px; /* Space for scrollbar */
+          }
+          /* Custom scrollbar for webkit */
+          .details-list::-webkit-scrollbar {
+            width: 4px;
+          }
+          .details-list::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.02);
+            border-radius: 4px;
+          }
+          .details-list::-webkit-scrollbar-thumb {
+            background: rgba(35, 45, 125, 0.2);
+            border-radius: 4px;
+          }
           .sku-detail-card {
+
             background: var(--bg-input);
             border-radius: 16px;
             padding: 16px;

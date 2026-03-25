@@ -14,12 +14,13 @@ function doGet(e) {
   let khoDataArr = sheetKho.getDataRange().getValues();
   let khoHeaders = khoDataArr.length > 0 ? khoDataArr[0] : [];
   
-  // Auto-correct headers if using old 7-column format
-  if (khoHeaders.length === 7 && khoHeaders[5] === "Vị Trí") {
+  // Auto-correct headers to the exact 8-column format if they don't match
+  if (khoHeaders.length < 8 || khoHeaders[5] !== "Kệ" || khoHeaders[6] !== "Vị Trí") {
     khoHeaders = ["Mã", "Màu", "Nhóm Cỡ", "Đơn", "Tháng", "Kệ", "Vị Trí", "Ngày giờ"];
     sheetKho.getRange(1, 1, 1, 8).setValues([khoHeaders]);
     khoDataArr = sheetKho.getDataRange().getValues(); // Refresh data
   }
+
 
   const khoItems = [];
   if (khoDataArr.length > 1) {
@@ -92,8 +93,10 @@ function doPost(e) {
   if (!action || action === "addKho") {
     const sheetKho = ss.getSheetByName('Kho') || ss.insertSheet('Kho');
 
-    if (sheetKho.getLastRow() === 0) {
-      sheetKho.appendRow(["Mã", "Màu", "Nhóm Cỡ", "Đơn", "Tháng", "Kệ", "Vị Trí", "Ngày giờ"]);
+    // Force headers to be correct before appending
+    let headers = sheetKho.getRange(1, 1, 1, sheetKho.getLastColumn() || 1).getValues()[0];
+    if (headers.length < 8 || headers[5] !== "Kệ" || headers[6] !== "Vị Trí") {
+      sheetKho.getRange(1, 1, 1, 8).setValues([["Mã", "Màu", "Nhóm Cỡ", "Đơn", "Tháng", "Kệ", "Vị Trí", "Ngày giờ"]]);
     }
     
     // Split "A-A01" into "A" and "A01"
