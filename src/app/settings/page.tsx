@@ -115,25 +115,7 @@ export default function SettingsPage() {
     syncToCloud({ action: "addSetting", type: typeMap[typeKey] || typeLabel, value: val });
   };
 
-  const handleDelete = async (typeKey: string, typeLabel: string, value: string) => {
-    if (!confirm(`Bạn có chắc muốn xóa "${value}"?`)) return;
-    
-    // OPTIMISTIC
-    const currentList = settingsData[typeKey] || [];
-    const newSettings = { ...settingsData, [typeKey]: currentList.filter((v: string) => v !== value) };
-    setSettingsData(newSettings);
-    localStorage.setItem("settings_data", JSON.stringify(newSettings));
 
-    const typeMap: { [key: string]: string } = {
-      "mã": "Mã",
-      "màu": "Màu",
-      "đơn": "Đơn",
-      "nhóm_cỡ": "Nhóm Cỡ",
-      "vị_trí": "Vị Trí"
-    };
-
-    syncToCloud({ action: "deleteSetting", type: typeMap[typeKey] || typeLabel, value });
-  }
 
   return (
     <div className="mobile-wrapper">
@@ -146,10 +128,13 @@ export default function SettingsPage() {
           <div key={g.key} className="setting-group">
             <div className="group-header">
               <h2>{g.label}</h2>
-              <button className="add-btn" onClick={() => {
-                setAddingType(g.key);
-                setNewValue("");
-              }}>
+              <button 
+                className="add-btn" 
+                onClick={() => {
+                  setAddingType(g.key);
+                  setNewValue("");
+                }}
+              >
                 <Plus size={16} /> Thêm
               </button>
             </div>
@@ -158,50 +143,49 @@ export default function SettingsPage() {
               {(settingsData[g.key] || []).map((val: string, i: number) => (
                 <div key={i} className="setting-item">
                   <span>{val}</span>
-                  <button className="del-btn" onClick={() => handleDelete(g.key, g.label, val)}><Trash2 size={16} /></button>
                 </div>
               ))}
-              
-              {addingType === g.key && (
-                <div className="add-input-row">
-                  {g.key === "vị_trí" ? (
-                    <div className="multi-input">
-                      <input 
-                        className="zone-input"
-                        placeholder="Kệ (A)" 
-                        value={newValue.split('-')[0] || ""} 
-                        onChange={e => {
-                          const parts = newValue.split('-');
-                          setNewValue(`${e.target.value.toUpperCase()}-${parts[1] || ""}`);
-                        }}
-                      />
-                      <input 
-                        className="loc-input"
-                        placeholder="Vị trí (01)" 
-                        value={newValue.split('-')[1] || ""} 
-                        onChange={e => {
-                          const parts = newValue.split('-');
-                          setNewValue(`${parts[0] || ""}-${e.target.value}`);
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <input 
-                      autoFocus
-                      placeholder="Nhập giá trị..."
-                      value={newValue}
-                      onChange={e => setNewValue(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAdd(g.key, g.label)}
-                    />
-                  )}
-                  <button className="save-btn" onClick={() => handleAdd(g.key, g.label)}>Lưu</button>
-                </div>
-              )}
 
+              
               {(!settingsData[g.key] || settingsData[g.key].length === 0) && addingType !== g.key && (
                 <div className="empty-state">Chưa có dữ liệu</div>
               )}
             </div>
+
+            {addingType === g.key && (
+              <div className="add-input-row">
+                {g.key === "vị_trí" ? (
+                  <div className="multi-input">
+                      <input 
+                        className="zone-input"
+                        placeholder="Kệ" 
+                        value={newValue.split('-')[0] || ""} 
+                      onChange={e => {
+                        const parts = newValue.split('-');
+                        setNewValue(`${e.target.value.toUpperCase()}-${parts[1] || ""}`);
+                      }}
+                    />
+                    <input 
+                      className="loc-input"
+                      placeholder="Vị trí" 
+                      value={newValue.split('-')[1] || ""} 
+                      onChange={e => {
+                        const parts = newValue.split('-');
+                        setNewValue(`${parts[0] || ""}-${e.target.value}`);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <input 
+                    placeholder="Nhập giá trị..."
+                    value={newValue}
+                    onChange={e => setNewValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAdd(g.key, g.label)}
+                  />
+                )}
+                <button className="save-btn" onClick={() => handleAdd(g.key, g.label)}>Lưu</button>
+              </div>
+            )}
           </div>
         ))}
 
@@ -266,8 +250,19 @@ export default function SettingsPage() {
           display: flex;
           flex-direction: column;
           gap: 8px;
+          max-height: 240px;
+          overflow-y: auto;
+          padding-right: 4px;
+        }
+        .items-list::-webkit-scrollbar {
+          width: 4px;
+        }
+        .items-list::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.05);
+          border-radius: 10px;
         }
         .setting-item {
+
           display: flex;
           justify-content: space-between;
           align-items: center;

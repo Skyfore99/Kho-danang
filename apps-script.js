@@ -68,11 +68,11 @@ function doPost(e) {
     }
     
     sheetKho.appendRow([
-      data.mã, 
-      data.màu, 
+      "'" + data.mã, 
+      "'" + data.màu, 
       data.đơn, 
       data.nhóm_cỡ, 
-      data.vị_trí, 
+      "'" + data.vị_trí, 
       data.số_lượng, 
       data.ghi_chú, 
       new Date()
@@ -89,7 +89,8 @@ function doPost(e) {
   }
 
   if (action === "addSetting") {
-    sheetSettings.appendRow([data.type, data.value, new Date()]);
+    // Force text format for all settings to preserve leading zeros
+    sheetSettings.appendRow([data.type, "'" + data.value, new Date()]);
     return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
       .setMimeType(ContentService.MimeType.JSON);
   }

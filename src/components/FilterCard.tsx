@@ -63,7 +63,6 @@ export default function FilterCard({ label, value, options = [], onChange, isSea
             <div className="search-bar">
               <Search size={16} />
               <input 
-                autoFocus
                 placeholder="Tìm kiếm..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
