@@ -1,11 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import BottomNav from "@/components/BottomNav";
+import Header from "@/components/Header";
 import { Plus, Trash2 } from "lucide-react";
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<"loading" | "success" | "saving" | "queued" | "done" | "idle">("loading");
   const [addingType, setAddingType] = useState<string | null>(null);
   const [newValue, setNewValue] = useState("");
 
@@ -18,19 +20,37 @@ export default function SettingsPage() {
   ];
 
   useEffect(() => {
+    const cachedSettings = localStorage.getItem("settings_data");
+    if (cachedSettings) {
+      try {
+        setSettingsData(JSON.parse(cachedSettings));
+        setLoading(false);
+        setSyncStatus("idle");
+      } catch (e) {
+        console.error(e);
+      }
+    }
     fetchData();
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
+    if (!localStorage.getItem("settings_data")) {
+      setLoading(true);
+    }
+    setSyncStatus("loading");
     try {
       const res = await fetch("/api/sync");
       const data = await res.json();
       if (!data.error) {
-        setSettingsData(data.settings || {});
+        const settings = data.settings || {};
+        setSettingsData(settings);
+        localStorage.setItem("settings_data", JSON.stringify(settings));
+        setSyncStatus("success");
+        setTimeout(() => setSyncStatus("idle"), 3000);
       }
     } catch (e) {
       console.error(e);
+      setSyncStatus("idle");
     } finally {
       setLoading(false);
     }
@@ -42,6 +62,7 @@ export default function SettingsPage() {
       return;
     }
     
+    setSyncStatus("saving");
     // Temporarily add to UI
     const currentList = settingsData[typeKey] || [];
     setSettingsData({ ...settingsData, [typeKey]: [...currentList, newValue] });
@@ -55,15 +76,21 @@ export default function SettingsPage() {
       await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "addSetting", type: typeLabel.split(" ")[0], value: val }), // Simple mapping: "Mã (SKU)" -> "Mã"
+        body: JSON.stringify({ action: "addSetting", type: typeLabel.split(" ")[0], value: val }),
       });
-      fetchData(); // Sync up
+      setSyncStatus("done");
+      setTimeout(() => setSyncStatus("idle"), 2000);
+      fetchData(); // Sync up and update global cache
     } catch (e) {
       console.error(e);
+      setSyncStatus("idle");
     }
   };
 
   const handleDelete = async (typeKey: string, typeLabel: string, value: string) => {
+    if (!confirm(`Bạn có chắc muốn xóa "${value}"?`)) return;
+    
+    setSyncStatus("saving");
     // Temporarily remove from UI
     const currentList = settingsData[typeKey] || [];
     setSettingsData({ ...settingsData, [typeKey]: currentList.filter((v: string) => v !== value) });
@@ -75,17 +102,18 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "deleteSetting", type: typeLabel.split(" ")[0], value }),
       });
+      setSyncStatus("done");
+      setTimeout(() => setSyncStatus("idle"), 3000);
       fetchData();
     } catch (e) {
       console.error(e);
+      setSyncStatus("idle");
     }
   }
 
   return (
     <div className="mobile-wrapper">
-      <header className="header">
-        <h1 className="title">Cài Đặt Dữ Liệu Gốc</h1>
-      </header>
+      <Header status={syncStatus} onSync={fetchData} />
       
       <main className="content">
         {loading && <div className="loader">Đang đồng bộ...</div>}
@@ -139,29 +167,13 @@ export default function SettingsPage() {
           display: flex;
           flex-direction: column;
         }
-        .header {
-          padding: 20px;
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(12px);
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          border-bottom: 1px solid rgba(0,0,0,0.03);
-          box-shadow: var(--shadow-sm);
-        }
-        .title {
-          font-size: 20px;
-          font-weight: 900;
-          color: var(--primary-blue);
-          margin: 0;
-          text-align: center;
-        }
         .content {
           padding: 20px;
           display: flex;
           flex-direction: column;
           gap: 24px;
         }
+
         .loader {
           text-align: center;
           padding: 40px;

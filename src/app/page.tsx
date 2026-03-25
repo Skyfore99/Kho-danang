@@ -41,7 +41,7 @@ export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [sheetData, setSheetData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [syncStatus, setSyncStatus] = useState<"loading" | "success" | "saving" | "queued" | "done" | "idle">("loading");
   const [settingsData, setSettingsData] = useState<any>({});
 
   // Filters
@@ -53,20 +53,52 @@ export default function Home() {
   });
 
   useEffect(() => {
+    // 1. Initial Load from LocalStorage for instant UI
+    const cachedKho = localStorage.getItem("warehouse_data");
+    const cachedSettings = localStorage.getItem("settings_data");
+    
+    if (cachedKho && cachedSettings) {
+      try {
+        setSheetData(JSON.parse(cachedKho));
+        setSettingsData(JSON.parse(cachedSettings));
+        setLoading(false);
+        setSyncStatus("idle"); // If we have cache, we aren't "loading" the UI anymore
+      } catch (e) {
+        console.error("Cache parse error", e);
+      }
+    }
+
+    // 2. Fetch fresh data in background
     fetchData();
   }, []);
 
   const fetchData = async () => {
-    setLoading(true);
+    // If no cache, show full loading. If has cache, show 'loading' pill only.
+    if (!localStorage.getItem("warehouse_data")) {
+      setLoading(true);
+    }
+    setSyncStatus("loading");
+
     try {
       const res = await fetch("/api/sync");
       const data = await res.json();
       if (!data.error) {
-        setSheetData(data.kho || []);
-        setSettingsData(data.settings || {});
+        const kho = data.kho || [];
+        const settings = data.settings || {};
+        
+        setSheetData(kho);
+        setSettingsData(settings);
+        
+        // Update Cache
+        localStorage.setItem("warehouse_data", JSON.stringify(kho));
+        localStorage.setItem("settings_data", JSON.stringify(settings));
+        
+        setSyncStatus("success");
+        setTimeout(() => setSyncStatus("idle"), 3000);
       }
     } catch (e) {
       console.error(e);
+      setSyncStatus("idle");
     } finally {
       setLoading(false);
     }
@@ -77,6 +109,7 @@ export default function Home() {
   };
 
   const handleEntrySubmit = async (data: any) => {
+    setSyncStatus("saving");
     try {
       const res = await fetch("/api/submit", {
         method: "POST",
@@ -84,13 +117,19 @@ export default function Home() {
         body: JSON.stringify(data),
       });
       if (res.ok) {
+        setSyncStatus("done");
+        setTimeout(() => setSyncStatus("idle"), 3000);
         setShowEntryModal(false);
         fetchData(); // Refresh data
+      } else {
+        setSyncStatus("idle");
       }
     } catch (e) {
       console.error("Submit failed:", e);
+      setSyncStatus("idle");
     }
   };
+
 
   // Logic to build zones from sheet data with dynamic filtering
   const zones = MOCK_ZONES.map(zone => ({
@@ -112,7 +151,7 @@ export default function Home() {
 
   return (
     <div className="mobile-wrapper">
-      <Header />
+      <Header status={syncStatus} onSync={fetchData} />
       
       <main className="content">
         {loading && <div className="loader">Đang tải...</div>}
