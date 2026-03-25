@@ -58,12 +58,16 @@ export default function Header({ status, onSync }: HeaderProps) {
           padding: 12px 20px;
           background: rgba(255, 255, 255, 0.96);
           backdrop-filter: blur(16px);
-          position: sticky;
+          position: fixed;
           top: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
           z-index: 1000;
           border-bottom: 1px solid rgba(0,0,0,0.02);
           box-shadow: 0 4px 12px rgba(0,0,0,0.02);
         }
+
         .header-content {
           display: flex;
           align-items: center;

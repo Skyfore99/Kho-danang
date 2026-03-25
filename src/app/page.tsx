@@ -243,8 +243,9 @@ export default function Home() {
           padding: 12px 16px;
         }
         .content {
-          padding-top: 4px;
+          padding-top: 72px;
         }
+
       `}</style>
     </div>
   );
