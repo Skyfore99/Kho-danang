@@ -2,19 +2,22 @@
 import { RefreshCw, CheckCircle2, Clock, Cloud } from "lucide-react";
 
 interface HeaderProps {
-  status: "loading" | "success" | "saving" | "queued" | "done" | "idle";
+  status: "loading" | "success" | "saving" | "queued" | "done" | "idle" | "error";
+
   onSync?: () => void;
 }
 
 export default function Header({ status, onSync }: HeaderProps) {
   const getStatusConfig = () => {
     switch (status) {
-      case "loading": return { text: "Đang tải dữ liệu lần đầu...", icon: RefreshCw, spin: true };
-      case "success": return { text: "Đồng bộ thành công", icon: CheckCircle2, spin: false };
-      case "saving": return { text: "Đã lưu, đợi đồng bộ", icon: Clock, spin: false };
-      case "queued": return { text: "Đang ở hàng chờ đợi đồng bộ", icon: RefreshCw, spin: true };
-      case "done": return { text: "Đã ghi vào Google Sheet", icon: Cloud, spin: false };
-      default: return { text: "Đã đồng bộ", icon: CheckCircle2, spin: false };
+      case "loading": return { text: "Đang tải dữ liệu...", icon: RefreshCw, spin: true, color: "var(--text-main)" };
+      case "success": return { text: "Đồng bộ thành công", icon: CheckCircle2, spin: false, color: "#10b981" };
+      case "error": return { text: "Lỗi đồng bộ", icon: RefreshCw, spin: false, color: "#ef4444" };
+      case "saving": return { text: "Đã lưu, đợi đồng bộ", icon: Clock, spin: false, color: "var(--text-main)" };
+      case "queued": return { text: "Đang ở hàng chờ", icon: RefreshCw, spin: true, color: "var(--text-main)" };
+      case "done": return { text: "Đã ghi vào Google Sheet", icon: Cloud, spin: false, color: "#10b981" };
+      default: return { text: "Đã đồng bộ", icon: CheckCircle2, spin: false, color: "#10b981" };
+
     }
   };
 
@@ -29,11 +32,12 @@ export default function Header({ status, onSync }: HeaderProps) {
           <h1 className="title">Kho Thành Phẩm</h1>
 
           {config && (
-            <div className="status-pill">
-              <config.icon size={11} className={config.spin ? "spin" : ""} />
+            <div className="status-pill" style={{ color: config.color }}>
+              <config.icon size={12} className={config.spin ? "spin" : ""} />
               <span>{config.text}</span>
             </div>
           )}
+
         </div>
         
         {onSync && (
@@ -82,15 +86,17 @@ export default function Header({ status, onSync }: HeaderProps) {
           display: flex;
           align-items: center;
           gap: 6px;
-          background: #1e293b;
-          color: #f1f5f9;
-          padding: 5px 12px;
+          background: #ffffff;
+          padding: 6px 14px;
           border-radius: 100px;
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 700;
+          border: 1px solid rgba(0,0,0,0.06);
+          box-shadow: 0 2px 6px rgba(0,0,0,0.02);
           animation: fadeIn 0.3s ease-out;
           white-space: nowrap;
         }
+
         .sync-btn {
           background: var(--bg-input);
           border: none;

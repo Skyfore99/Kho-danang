@@ -19,11 +19,14 @@ function doGet(e) {
     for (let i = 1; i < khoData.length; i++) {
       let item = {};
       khoHeaders.forEach((header, index) => {
-        item[header.toLowerCase().replace(/ /g, '_')] = khoData[i][index];
+        // Normalize header names to keys like 'mã', 'màu', 'kệ', 'vị_trí', etc.
+        const key = header.toString().toLowerCase().replace(/ /g, '_');
+        item[key] = khoData[i][index];
       });
       khoItems.push(item);
     }
   }
+
 
   // 2. Get Settings Data (Sheet 'Settings')
   const sheetSettings = ss.getSheetByName('Settings') || ss.insertSheet('Settings');
@@ -71,19 +74,26 @@ function doPost(e) {
     const sheetKho = ss.getSheetByName('Kho') || ss.insertSheet('Kho');
 
     if (sheetKho.getLastRow() === 0) {
-      sheetKho.appendRow(["Mã", "Màu", "Đơn", "Nhóm Cỡ", "Vị Trí", "Số Lượng", "Ghi Chú", "Thời Gian"]);
+      sheetKho.appendRow(["Mã", "Màu", "Nhóm Cỡ", "Đơn", "Tháng", "Kệ", "Vị Trí", "Ngày giờ"]);
     }
     
+    // Split "A-A01" into "A" and "A01"
+    const locParts = (data.vị_trí || "").split('-');
+    const ke = locParts.length > 1 ? locParts[0] : "";
+    const vitri = locParts.length > 1 ? locParts[1] : (data.vị_trí || "");
+
     sheetKho.appendRow([
       "'" + (data.mã || ""), 
       "'" + (data.màu || ""), 
+      data.nhóm_cỡ || "",
       data.đơn || "", 
-      data.nhóm_cỡ || "", 
-      "'" + (data.vị_trí || ""), 
-      data.số_lượng || 0, 
-      data.ghi_chú || "", 
+      data.tháng || "",
+      "'" + ke,
+      "'" + vitri, 
       new Date()
     ]);
+
+
     
     return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
       .setMimeType(ContentService.MimeType.JSON);

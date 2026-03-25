@@ -15,7 +15,7 @@ export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [sheetData, setSheetData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [syncStatus, setSyncStatus] = useState<"loading" | "success" | "saving" | "queued" | "done" | "idle">("loading");
+  const [syncStatus, setSyncStatus] = useState<"loading" | "success" | "saving" | "queued" | "done" | "idle" | "error">("idle");
   const [settingsData, setSettingsData] = useState<any>({});
 
   // Filters
@@ -112,8 +112,9 @@ export default function Home() {
         }
       } catch (e) {
         console.error("Submit failed:", e);
-        setSyncStatus("idle");
+        setSyncStatus("error");
       }
+
     }, 1500); // Artificial delay to show "saving" status
   };
 
@@ -134,7 +135,7 @@ export default function Home() {
       dynamicZones.push(zone);
     }
     
-    let activeItems = sheetData.filter(d => d.vị_trí === locId);
+    let activeItems = sheetData.filter(d => `${d.kệ}-${d.vị_trí}` === locId);
     if (filters.mã) activeItems = activeItems.filter(d => d.mã === filters.mã);
     if (filters.màu) activeItems = activeItems.filter(d => d.màu === filters.màu);
     if (filters.đơn) activeItems = activeItems.filter(d => d.đơn === filters.đơn);
@@ -143,9 +144,10 @@ export default function Home() {
     zone.locations.push({
       id: locId,
       displayId: locName,
-      skus: activeItems.map(d => ({ id: d.mã }))
+      skus: activeItems.slice().reverse().map(d => ({ id: d.mã }))
     });
   });
+
 
   return (
     <div className="mobile-wrapper">
@@ -203,13 +205,14 @@ export default function Home() {
         <LocationDetails 
           locId={selectedLocation} 
           skus={sheetData.filter(d => {
-            if (d.vị_trí !== selectedLocation) return false;
+            if (`${d.kệ}-${d.vị_trí}` !== selectedLocation) return false;
             if (filters.mã && d.mã !== filters.mã) return false;
             if (filters.màu && d.màu !== filters.màu) return false;
             if (filters.đơn && d.đơn !== filters.đơn) return false;
             if (filters.nhóm_cỡ && d.nhóm_cỡ !== filters.nhóm_cỡ) return false;
             return true;
           })}
+
           onClose={() => setSelectedLocation(null)} 
         />
       )}

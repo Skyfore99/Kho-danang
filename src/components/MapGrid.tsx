@@ -34,9 +34,16 @@ export default function MapGrid({ zones, onLocationClick }: MapGridProps) {
                 className={`location-card ${loc.skus.length > 0 ? 'active' : ''}`}
                 onClick={() => onLocationClick(loc.id)}
               >
-                <span className="loc-id">{loc.displayId || loc.id}</span>
-                {loc.skus.length > 0 && <span className="count-badge">{loc.skus.length}</span>}
+                <h3 className="location-id">{loc.displayId || loc.id}</h3>
+                {loc.skus.length > 0 && (
+                  <div className="sku-badges">
+                    {loc.skus.slice(0, 6).map((sku, idx) => (
+                      <div key={idx} className="sku-badge">{sku.id}</div>
+                    ))}
+                  </div>
+                )}
               </div>
+
             ))}
           </div>
         </section>
