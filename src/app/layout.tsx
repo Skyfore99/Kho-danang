@@ -14,7 +14,11 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   themeColor: '#ffffff',
   viewport: 'width=device-width, initial-scale=1',
+  icons: {
+    icon: '/icon.png',
+  },
 }
+
 
 export default function RootLayout({
   children,

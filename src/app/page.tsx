@@ -135,11 +135,21 @@ export default function Home() {
       dynamicZones.push(zone);
     }
     
-    let activeItems = sheetData.filter(d => `${d.kệ}-${d.vị_trí}` === locId);
-    if (filters.mã) activeItems = activeItems.filter(d => d.mã === filters.mã);
-    if (filters.màu) activeItems = activeItems.filter(d => d.màu === filters.màu);
-    if (filters.đơn) activeItems = activeItems.filter(d => d.đơn === filters.đơn);
-    if (filters.nhóm_cỡ) activeItems = activeItems.filter(d => d.nhóm_cỡ === filters.nhóm_cỡ);
+    let activeItems = sheetData.filter(d => {
+      // Robust matching: handle both split format (ke + vitri) and old direct format
+      const fullLoc = d.kệ && d.vị_trí 
+        ? `${d.kệ}-${d.vị_trí}`.toUpperCase().trim()
+        : (d.vị_trí || "").toString().toUpperCase().trim();
+      
+      return fullLoc === locId.toUpperCase().trim();
+    });
+
+
+    // Re-apply filters
+    if (filters.mã) activeItems = activeItems.filter(d => d.mã.toString().toUpperCase().trim() === filters.mã.toUpperCase().trim());
+    if (filters.màu) activeItems = activeItems.filter(d => d.màu.toString().toUpperCase().trim() === filters.màu.toUpperCase().trim());
+    if (filters.đơn) activeItems = activeItems.filter(d => d.đơn.toString().toUpperCase().trim() === filters.đơn.toUpperCase().trim());
+    if (filters.nhóm_cỡ) activeItems = activeItems.filter(d => d.nhóm_cỡ.toString().toUpperCase().trim() === filters.nhóm_cỡ.toUpperCase().trim());
 
     zone.locations.push({
       id: locId,
@@ -147,8 +157,6 @@ export default function Home() {
       skus: activeItems.slice().reverse().map(d => ({ id: d.mã }))
     });
   });
-
-
   return (
     <div className="mobile-wrapper">
       <Header status={syncStatus} onSync={fetchData} />

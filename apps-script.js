@@ -9,23 +9,42 @@ const SPREADSHEET_ID = SpreadsheetApp.getActiveSpreadsheet().getId();
 function doGet(e) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   
-  // 1. Get Warehouse Data (Sheet 'Kho')
+  // 1. Get Inventory Data (Sheet 'Kho')
   const sheetKho = ss.getSheetByName('Kho') || ss.insertSheet('Kho');
-  const khoData = sheetKho.getDataRange().getValues();
-  const khoHeaders = khoData[0];
-  const khoItems = [];
+  let khoDataArr = sheetKho.getDataRange().getValues();
+  let khoHeaders = khoDataArr.length > 0 ? khoDataArr[0] : [];
   
-  if (khoData.length > 1) {
-    for (let i = 1; i < khoData.length; i++) {
+  // Auto-correct headers if using old 7-column format
+  if (khoHeaders.length === 7 && khoHeaders[5] === "Vị Trí") {
+    khoHeaders = ["Mã", "Màu", "Nhóm Cỡ", "Đơn", "Tháng", "Kệ", "Vị Trí", "Ngày giờ"];
+    sheetKho.getRange(1, 1, 1, 8).setValues([khoHeaders]);
+    khoDataArr = sheetKho.getDataRange().getValues(); // Refresh data
+  }
+
+  const khoItems = [];
+  if (khoDataArr.length > 1) {
+    for (let i = 1; i < khoDataArr.length; i++) {
       let item = {};
       khoHeaders.forEach((header, index) => {
-        // Normalize header names to keys like 'mã', 'màu', 'kệ', 'vị_trí', etc.
-        const key = header.toString().toLowerCase().replace(/ /g, '_');
-        item[key] = khoData[i][index];
+        const val = khoDataArr[i][index];
+        if (header) {
+          const key = header.toString().toLowerCase().replace(/ /g, '_');
+          item[key] = val !== undefined ? val : "";
+        }
       });
+
+      // Special handling for old "A-A01" format in the "Kệ" column
+      if (item.kệ && item.kệ.toString().includes('-') && (!item.vị_trí || item.vị_trí === "")) {
+        const parts = item.kệ.split('-');
+        item.kệ = parts[0];
+        item.vị_trí = parts[1];
+      }
+      
       khoItems.push(item);
+
     }
   }
+
 
 
   // 2. Get Settings Data (Sheet 'Settings')
