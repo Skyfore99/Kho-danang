@@ -27,6 +27,7 @@ export default function Header({ status, onSync }: HeaderProps) {
       <div className="header-content">
         <div className="title-section">
           <h1 className="title">Kho Thành Phẩm</h1>
+
           {config && (
             <div className="status-pill">
               <config.icon size={11} className={config.spin ? "spin" : ""} />

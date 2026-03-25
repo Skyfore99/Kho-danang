@@ -61,7 +61,6 @@ export default function FilterCard({ label, value, options = [], onChange, isSea
         <div className="dropdown-panel">
           {isSearchable && (
             <div className="search-bar">
-              <Search size={16} />
               <input 
                 placeholder="Tìm kiếm..." 
                 value={searchTerm}

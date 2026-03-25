@@ -33,14 +33,25 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
+    
+    // Check required
     if (!formData.mã) newErrors.mã = "Mã là bắt buộc";
     if (!formData.màu) newErrors.màu = "Màu là bắt buộc";
     if (!formData.nhóm_cỡ) newErrors.nhóm_cỡ = "Nhóm cỡ là bắt buộc";
     if (!formData.đơn) newErrors.đơn = "Đơn là bắt buộc";
     if (!formData.vị_trí) newErrors.vị_trí = "Vị trí là bắt buộc";
+
+    // STRICT VALIDATION (Match against Master Data)
+    if (formData.mã && !LOOKUP_DATA.mã.includes(formData.mã)) newErrors.mã = "Mã không tồn tại trong dữ liệu gốc";
+    if (formData.màu && !LOOKUP_DATA.màu.includes(formData.màu)) newErrors.màu = "Màu không tồn tại trong dữ liệu gốc";
+    if (formData.đơn && !LOOKUP_DATA.đơn.includes(formData.đơn)) newErrors.đơn = "Đơn không tồn tại trong dữ liệu gốc";
+    if (formData.vị_trí && !LOOKUP_DATA.vị_trí.includes(formData.vị_trí)) newErrors.vị_trí = "Vị trí không tồn tại trong dữ liệu gốc";
+    if (formData.nhóm_cỡ && !LOOKUP_DATA.nhóm_cỡ.includes(formData.nhóm_cỡ)) newErrors.nhóm_cỡ = "Nhóm cỡ không tồn tại";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
 
   const handleSelect = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -60,7 +71,6 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
           <div className="form-group">
             <label>MÃ *</label>
             <div className="search-input" onClick={() => setShowDropdown("mã")}>
-              <Search size={18} className="search-icon" />
               <input 
                 placeholder="Tìm mã..." 
                 value={formData.mã} 
@@ -70,6 +80,7 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
                 }}
               />
             </div>
+
             {showDropdown === "mã" && (
               <ul className="dropdown">
                 {LOOKUP_DATA.mã.filter((v: string) => v.toLowerCase().includes(formData.mã.toLowerCase())).map((v: string) => (
@@ -84,7 +95,6 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
           <div className="form-group">
             <label>MÀU *</label>
             <div className="search-input" onClick={() => setShowDropdown("màu")}>
-              <Search size={20} className="search-icon" />
               <input 
                 placeholder="Tìm màu..." 
                 value={formData.màu} 
@@ -94,6 +104,7 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
                 }}
               />
             </div>
+
             {showDropdown === "màu" && (
               <ul className="dropdown">
                 {LOOKUP_DATA.màu.filter((v: string) => v.toLowerCase().includes(formData.màu.toLowerCase())).map((v: string) => (
@@ -121,7 +132,6 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
           <div className="form-group">
             <label>ĐƠN *</label>
             <div className="search-input" onClick={() => setShowDropdown("đơn")}>
-              <Search size={20} className="search-icon" />
               <input 
                 placeholder="Tìm đơn..." 
                 value={formData.đơn} 
@@ -131,6 +141,7 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
                 }}
               />
             </div>
+
             {showDropdown === "đơn" && (
               <ul className="dropdown">
                 {LOOKUP_DATA.đơn.filter((v: string) => v.toLowerCase().includes(formData.đơn.toLowerCase())).map((v: string) => (
@@ -141,18 +152,29 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
             {errors.đơn && <span className="error">{errors.đơn}</span>}
           </div>
 
-          {/* VỊ TRÍ (Select Only) */}
+          {/* VỊ TRÍ (Searchable) */}
           <div className="form-group">
             <label>VỊ TRÍ *</label>
-            <select 
-              value={formData.vị_trí} 
-              onChange={(e) => setFormData({...formData, vị_trí: e.target.value})}
-            >
-              <option value="">Chọn vị trí...</option>
-              {LOOKUP_DATA.vị_trí.map((v: string) => <option key={v} value={v}>{v}</option>)}
-            </select>
+            <div className="search-input" onClick={() => setShowDropdown("vị_trí")}>
+              <input 
+                placeholder="Tìm vị trí..." 
+                value={formData.vị_trí} 
+                onChange={(e) => {
+                  setFormData({...formData, vị_trí: e.target.value});
+                  setShowDropdown("vị_trí");
+                }}
+              />
+            </div>
+            {showDropdown === "vị_trí" && (
+              <ul className="dropdown">
+                {LOOKUP_DATA.vị_trí.filter((v: string) => v.toLowerCase().includes(formData.vị_trí.toLowerCase())).map((v: string) => (
+                  <li key={v} onClick={() => handleSelect("vị_trí", v)}>{v}</li>
+                ))}
+              </ul>
+            )}
             {errors.vị_trí && <span className="error">{errors.vị_trí}</span>}
           </div>
+
 
           {/* THÁNG (Select Only) */}
           <div className="form-group">
@@ -257,15 +279,9 @@ export default function EntryForm({ onClose, onSubmit, settings = {} }: EntryFor
           display: flex;
           align-items: center;
         }
-        .search-icon {
-          position: absolute;
-          left: 16px;
-          color: var(--text-muted);
-        }
-        input, select {
+         input, select {
           width: 100%;
           padding: 16px;
-          padding-left: 44px;
           border: 2px solid transparent;
           border-radius: 16px;
           font-size: 15px;

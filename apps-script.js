@@ -57,24 +57,31 @@ function doGet(e) {
 
 function doPost(e) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const data = JSON.parse(e.postData.contents);
+  let data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Invalid JSON" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
   const action = data.action;
 
-  // --- ACTION: SUBMIT NEW INVENTORY ENTRY ---
-  if (!action) {
+  // --- ACTION: SUBMIT NEW INVENTORY ENTRY (Auto-detect or explicit 'addKho') ---
+  if (!action || action === "addKho") {
     const sheetKho = ss.getSheetByName('Kho') || ss.insertSheet('Kho');
+
     if (sheetKho.getLastRow() === 0) {
       sheetKho.appendRow(["Mã", "Màu", "Đơn", "Nhóm Cỡ", "Vị Trí", "Số Lượng", "Ghi Chú", "Thời Gian"]);
     }
     
     sheetKho.appendRow([
-      "'" + data.mã, 
-      "'" + data.màu, 
-      data.đơn, 
-      data.nhóm_cỡ, 
-      "'" + data.vị_trí, 
-      data.số_lượng, 
-      data.ghi_chú, 
+      "'" + (data.mã || ""), 
+      "'" + (data.màu || ""), 
+      data.đơn || "", 
+      data.nhóm_cỡ || "", 
+      "'" + (data.vị_trí || ""), 
+      data.số_lượng || 0, 
+      data.ghi_chú || "", 
       new Date()
     ]);
     

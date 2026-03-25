@@ -52,3 +52,13 @@ a {
     color-scheme: dark;
   }
 }
+/* --- MOBILE ZOOM FIX --- */
+input, select, textarea {
+  font-size: 16px !important; /* Forces 16px to prevent iOS auto-zoom on focus */
+}
+
+@media (min-width: 768px) {
+  input, select, textarea {
+    font-size: 14px !important; /* Restore 14px for desktop if preferred */
+  }
+}
