@@ -28,16 +28,15 @@ export default function SettingsPage() {
         setSyncStatus("idle");
       } catch (e) {
         console.error(e);
+        fetchData();
       }
+    } else {
+      fetchData();
     }
-    fetchData();
   }, []);
 
-  const fetchData = async () => {
-    if (!localStorage.getItem("settings_data")) {
-      setLoading(true);
-    }
-    setSyncStatus("loading");
+  const fetchData = async (silent = false) => {
+    if (!silent) setSyncStatus("loading");
     try {
       const res = await fetch("/api/sync");
       const data = await res.json();
@@ -45,8 +44,14 @@ export default function SettingsPage() {
         const settings = data.settings || {};
         setSettingsData(settings);
         localStorage.setItem("settings_data", JSON.stringify(settings));
-        setSyncStatus("success");
-        setTimeout(() => setSyncStatus("idle"), 3000);
+        localStorage.setItem("last_sync_time", Date.now().toString());
+
+        if (!silent) {
+          setSyncStatus("success");
+          setTimeout(() => setSyncStatus("idle"), 3000);
+        } else {
+          setSyncStatus("idle");
+        }
       }
     } catch (e) {
       console.error(e);
@@ -56,59 +61,80 @@ export default function SettingsPage() {
     }
   };
 
+  const syncToCloud = async (actionData: any) => {
+    setSyncStatus("saving"); // "Đã lưu, đợi đồng bộ"
+    
+    setTimeout(async () => {
+      setSyncStatus("queued"); // "Đang ở hàng chờ đợi đồng bộ"
+      
+      try {
+        const res = await fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(actionData),
+        });
+        if (res.ok) {
+          setSyncStatus("done"); // "Đã ghi vào Google Sheet"
+          setTimeout(() => {
+            setSyncStatus("idle");
+            fetchData(true); // Silent refresh
+          }, 3000);
+        } else {
+          setSyncStatus("idle");
+        }
+      } catch (e) {
+        console.error(e);
+        setSyncStatus("idle");
+      }
+    }, 1200);
+  };
+
   const handleAdd = async (typeKey: string, typeLabel: string) => {
     if (!newValue.trim()) {
       setAddingType(null);
       return;
     }
     
-    setSyncStatus("saving");
-    // Temporarily add to UI
-    const currentList = settingsData[typeKey] || [];
-    setSettingsData({ ...settingsData, [typeKey]: [...currentList, newValue] });
-    
     const val = newValue;
+    // OPTIMISTIC
+    const currentList = settingsData[typeKey] || [];
+    const newSettings = { ...settingsData, [typeKey]: [...currentList, val] };
+    setSettingsData(newSettings);
+    localStorage.setItem("settings_data", JSON.stringify(newSettings));
+    
     setNewValue("");
     setAddingType(null);
 
-    // Send to backend
-    try {
-      await fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "addSetting", type: typeLabel.split(" ")[0], value: val }),
-      });
-      setSyncStatus("done");
-      setTimeout(() => setSyncStatus("idle"), 2000);
-      fetchData(); // Sync up and update global cache
-    } catch (e) {
-      console.error(e);
-      setSyncStatus("idle");
-    }
+    // Map the key back to a clean label for Google Sheets
+    const typeMap: { [key: string]: string } = {
+      "mã": "Mã",
+      "màu": "Màu",
+      "đơn": "Đơn",
+      "nhóm_cỡ": "Nhóm Cỡ",
+      "vị_trí": "Vị Trí"
+    };
+
+    syncToCloud({ action: "addSetting", type: typeMap[typeKey] || typeLabel, value: val });
   };
 
   const handleDelete = async (typeKey: string, typeLabel: string, value: string) => {
     if (!confirm(`Bạn có chắc muốn xóa "${value}"?`)) return;
     
-    setSyncStatus("saving");
-    // Temporarily remove from UI
+    // OPTIMISTIC
     const currentList = settingsData[typeKey] || [];
-    setSettingsData({ ...settingsData, [typeKey]: currentList.filter((v: string) => v !== value) });
+    const newSettings = { ...settingsData, [typeKey]: currentList.filter((v: string) => v !== value) };
+    setSettingsData(newSettings);
+    localStorage.setItem("settings_data", JSON.stringify(newSettings));
 
-    // Send delete to backend
-    try {
-      await fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "deleteSetting", type: typeLabel.split(" ")[0], value }),
-      });
-      setSyncStatus("done");
-      setTimeout(() => setSyncStatus("idle"), 3000);
-      fetchData();
-    } catch (e) {
-      console.error(e);
-      setSyncStatus("idle");
-    }
+    const typeMap: { [key: string]: string } = {
+      "mã": "Mã",
+      "màu": "Màu",
+      "đơn": "Đơn",
+      "nhóm_cỡ": "Nhóm Cỡ",
+      "vị_trí": "Vị Trí"
+    };
+
+    syncToCloud({ action: "deleteSetting", type: typeMap[typeKey] || typeLabel, value });
   }
 
   return (
@@ -122,7 +148,10 @@ export default function SettingsPage() {
           <div key={g.key} className="setting-group">
             <div className="group-header">
               <h2>{g.label}</h2>
-              <button className="add-btn" onClick={() => setAddingType(g.key)}>
+              <button className="add-btn" onClick={() => {
+                setAddingType(g.key);
+                setNewValue("");
+              }}>
                 <Plus size={16} /> Thêm
               </button>
             </div>
@@ -137,16 +166,40 @@ export default function SettingsPage() {
               
               {addingType === g.key && (
                 <div className="add-input-row">
-                  <input 
-                    autoFocus
-                    placeholder="Nhập giá trị..."
-                    value={newValue}
-                    onChange={e => setNewValue(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAdd(g.key, g.label)}
-                  />
+                  {g.key === "vị_trí" ? (
+                    <div className="multi-input">
+                      <input 
+                        className="zone-input"
+                        placeholder="Kệ (A)" 
+                        value={newValue.split('-')[0] || ""} 
+                        onChange={e => {
+                          const parts = newValue.split('-');
+                          setNewValue(`${e.target.value.toUpperCase()}-${parts[1] || ""}`);
+                        }}
+                      />
+                      <input 
+                        className="loc-input"
+                        placeholder="Vị trí (01)" 
+                        value={newValue.split('-')[1] || ""} 
+                        onChange={e => {
+                          const parts = newValue.split('-');
+                          setNewValue(`${parts[0] || ""}-${e.target.value}`);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <input 
+                      autoFocus
+                      placeholder="Nhập giá trị..."
+                      value={newValue}
+                      onChange={e => setNewValue(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAdd(g.key, g.label)}
+                    />
+                  )}
                   <button className="save-btn" onClick={() => handleAdd(g.key, g.label)}>Lưu</button>
                 </div>
               )}
+
               {(!settingsData[g.key] || settingsData[g.key].length === 0) && addingType !== g.key && (
                 <div className="empty-state">Chưa có dữ liệu</div>
               )}
@@ -254,7 +307,17 @@ export default function SettingsPage() {
           color: var(--primary-blue);
           outline: none;
         }
+        .multi-input {
+          display: flex;
+          gap: 4px;
+          flex: 4;
+        }
+        .zone-input {
+          max-width: 60px;
+          border-right: 1px solid rgba(0,0,0,0.05) !important;
+        }
         .save-btn {
+
           background: var(--primary-blue);
           color: white;
           border: none;

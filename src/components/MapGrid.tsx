@@ -6,7 +6,8 @@ interface SKU {
 
 interface Location {
   id: string;
-  skus: SKU[];
+  displayId?: string;
+  skus: { id: string }[];
 }
 
 interface Zone {
@@ -28,15 +29,13 @@ export default function MapGrid({ zones, onLocationClick }: MapGridProps) {
           <h2 className="zone-title">{zone.name}</h2>
           <div className="locations-container">
             {zone.locations.map((loc) => (
-              <div key={loc.id} className="location-card" onClick={() => onLocationClick(loc.id)}>
-                <h3 className="location-id">{loc.id}</h3>
-                <div className="sku-badges">
-                  {loc.skus.map((sku) => (
-                    <span key={sku.id} className="sku-badge">
-                      {sku.id}
-                    </span>
-                  ))}
-                </div>
+              <div 
+                key={loc.id} 
+                className={`location-card ${loc.skus.length > 0 ? 'active' : ''}`}
+                onClick={() => onLocationClick(loc.id)}
+              >
+                <span className="loc-id">{loc.displayId || loc.id}</span>
+                {loc.skus.length > 0 && <span className="count-badge">{loc.skus.length}</span>}
               </div>
             ))}
           </div>
