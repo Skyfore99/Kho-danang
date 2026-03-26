@@ -195,7 +195,9 @@ export default function Home() {
 
         </div>
 
-        <MapGrid zones={dynamicZones} onLocationClick={handleLocationClick} />
+        <div className="map-scroll-container">
+          <MapGrid zones={dynamicZones} onLocationClick={handleLocationClick} />
+        </div>
       </main>
 
 
@@ -230,22 +232,45 @@ export default function Home() {
       <style jsx>{`
         .mobile-wrapper {
           width: 100%;
-          min-height: 100vh;
+          height: 100vh;
+          overflow: hidden;
           background-color: var(--bg-light);
           position: relative;
           display: flex;
           flex-direction: column;
+        }
+        .content {
+          padding-top: 72px;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          height: 100%;
+          overflow: hidden;
         }
         .filters-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 12px;
           padding: 12px 16px;
+          flex-shrink: 0;
+          background-color: var(--bg-light);
+          z-index: 10;
         }
-        .content {
-          padding-top: 72px;
+        .map-scroll-container {
+          flex: 1;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
         }
-
+        .map-scroll-container::-webkit-scrollbar {
+          width: 4px;
+        }
+        .map-scroll-container::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .map-scroll-container::-webkit-scrollbar-thumb {
+          background: rgba(35, 45, 125, 0.2);
+          border-radius: 4px;
+        }
       `}</style>
     </div>
   );
