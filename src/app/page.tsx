@@ -229,6 +229,7 @@ export default function Home() {
           })}
           onClose={() => setSelectedLocation(null)} 
           onRefresh={() => fetchData(true)}
+          settings={settingsData}
         />
       )}
 

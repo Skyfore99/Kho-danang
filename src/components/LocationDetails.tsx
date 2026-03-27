@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, Edit2, Check, RotateCcw } from "lucide-react";
+import { X, Edit2, Check, RotateCcw, Search } from "lucide-react";
 
 interface SKUDetail {
   mã: string;
@@ -9,6 +9,8 @@ interface SKUDetail {
   nhóm_cỡ: string;
   tháng?: string;
   row_index?: number;
+  kệ?: string;
+  vị_trí?: string;
 }
 
 interface LocationDetailsProps {
@@ -16,13 +18,24 @@ interface LocationDetailsProps {
   skus: SKUDetail[];
   onClose: () => void;
   onRefresh?: () => void;
+  settings?: any;
 }
 
-export default function LocationDetails({ locId, skus, onClose, onRefresh }: LocationDetailsProps) {
+export default function LocationDetails({ locId, skus, onClose, onRefresh, settings = {} }: LocationDetailsProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editData, setEditData] = useState<SKUDetail | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showDropdown, setShowDropdown] = useState<string | null>(null);
+
+  const LOOKUP_DATA = {
+    mã: settings.mã || [],
+    màu: settings.màu || [],
+    nhóm_cỡ: settings.nhóm_cỡ || [],
+    đơn: settings.đơn || [],
+    vị_trí: settings.vị_trí || [],
+    tháng: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"],
+  };
 
   useEffect(() => {
     const checkAdmin = () => {
@@ -35,12 +48,20 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
 
   const handleStartEdit = (index: number, sku: SKUDetail) => {
     setEditingIndex(index);
-    setEditData({ ...sku });
+    // Ensure vị_trí is set for navigation/editing
+    const fullLoc = sku.kệ && sku.vị_trí ? `${sku.kệ}-${sku.vị_trí}` : (sku.vị_trí || locId);
+    setEditData({ ...sku, vị_trí: fullLoc });
   };
 
   const handleCancelEdit = () => {
     setEditingIndex(null);
     setEditData(null);
+    setShowDropdown(null);
+  };
+
+  const handleSelect = (field: string, value: string) => {
+    setEditData((prev: any) => ({ ...prev, [field]: value }));
+    setShowDropdown(null);
   };
 
   const handleSaveEdit = async () => {
@@ -53,7 +74,6 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
         body: JSON.stringify({
           action: "updateKho",
           ...editData,
-          vị_trí: locId
         }),
       });
       if (res.ok) {
@@ -92,15 +112,115 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
                 <div key={index} className={`sku-detail-card ${isEditing ? 'editing' : ''}`}>
                   {isEditing ? (
                     <div className="edit-form">
-                      {['mã', 'màu', 'đơn', 'nhóm_cỡ', 'tháng'].map((field) => (
-                        <div key={field} className="edit-row">
-                          <label>{field.toUpperCase()}:</label>
+                      {/* Similar structure to EntryForm */}
+                      
+                      <div className="form-group">
+                        <label>MÃ</label>
+                        <div className="search-input" onClick={() => setShowDropdown("mã")}>
                           <input 
-                            value={(editData as any)?.[field] || ""} 
-                            onChange={e => setEditData({...editData!, [field]: e.target.value})}
+                            placeholder="Tìm mã..." 
+                            value={editData?.mã || ""} 
+                            onChange={(e) => {
+                              setEditData({...editData!, mã: e.target.value});
+                              setShowDropdown("mã");
+                            }}
                           />
                         </div>
-                      ))}
+                        {showDropdown === "mã" && (
+                          <ul className="dropdown">
+                            {LOOKUP_DATA.mã.filter((v: string) => v.toLowerCase().includes((editData?.mã || "").toLowerCase())).map((v: string) => (
+                              <li key={v} onClick={() => handleSelect("mã", v)}>{v}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <label>MÀU</label>
+                        <div className="search-input" onClick={() => setShowDropdown("màu")}>
+                          <input 
+                            placeholder="Tìm màu..." 
+                            value={editData?.màu || ""} 
+                            onChange={(e) => {
+                              setEditData({...editData!, màu: e.target.value});
+                              setShowDropdown("màu");
+                            }}
+                          />
+                        </div>
+                        {showDropdown === "màu" && (
+                          <ul className="dropdown">
+                            {LOOKUP_DATA.màu.filter((v: string) => v.toLowerCase().includes((editData?.màu || "").toLowerCase())).map((v: string) => (
+                              <li key={v} onClick={() => handleSelect("màu", v)}>{v}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <label>NHÓM CỠ</label>
+                        <select 
+                          value={editData?.nhóm_cỡ || ""} 
+                          onChange={(e) => setEditData({...editData!, nhóm_cỡ: e.target.value})}
+                        >
+                          <option value="">Chọn nhóm cỡ...</option>
+                          {LOOKUP_DATA.nhóm_cỡ.map((v: string) => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label>ĐƠN</label>
+                        <div className="search-input" onClick={() => setShowDropdown("đơn")}>
+                          <input 
+                            placeholder="Tìm đơn..." 
+                            value={editData?.đơn || ""} 
+                            onChange={(e) => {
+                              setEditData({...editData!, đơn: e.target.value});
+                              setShowDropdown("đơn");
+                            }}
+                          />
+                        </div>
+                        {showDropdown === "đơn" && (
+                          <ul className="dropdown">
+                            {LOOKUP_DATA.đơn.filter((v: string) => v.toLowerCase().includes((editData?.đơn || "").toLowerCase())).map((v: string) => (
+                              <li key={v} onClick={() => handleSelect("đơn", v)}>{v}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      {/* NEW: Vị trí input like EntryForm */}
+                      <div className="form-group">
+                        <label>VỊ TRÍ</label>
+                        <div className="search-input" onClick={() => setShowDropdown("vị_trí")}>
+                          <input 
+                            placeholder="Tìm vị trí..." 
+                            value={editData?.vị_trí || ""} 
+                            onChange={(e) => {
+                              setEditData({...editData!, vị_trí: e.target.value});
+                              setShowDropdown("vị_trí");
+                            }}
+                          />
+                        </div>
+                        {showDropdown === "vị_trí" && (
+                          <ul className="dropdown">
+                            {LOOKUP_DATA.vị_trí.filter((v: string) => v.toLowerCase().includes((editData?.vị_trí || "").toLowerCase())).map((v: string) => (
+                              <li key={v} onClick={() => handleSelect("vị_trí", v)}>{v}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <label>THÁNG</label>
+                        <select 
+                          value={editData?.tháng || ""} 
+                          onChange={(e) => setEditData({...editData!, tháng: e.target.value})}
+                        >
+                          <option value="">Chọn tháng...</option>
+                          {LOOKUP_DATA.tháng.map((v: string) => <option key={v} value={v}>{v}</option>)}
+                        </select>
+                      </div>
+
                       <div className="edit-actions">
                         <button className="cancel-btn" onClick={handleCancelEdit} disabled={saving}>
                           <RotateCcw size={16} /> Hủy
@@ -157,9 +277,9 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.85); /* Increased opacity for light mode */
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
-            z-index: 9999; /* Maximize z-index to stay above filters */
+            z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -167,12 +287,12 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
           }
           .modal-content {
             background: white;
-            position: relative; /* Changed from absolute to work with flex center */
+            position: relative;
             width: 100%;
             max-width: 420px;
             border-radius: 36px;
             padding: 32px 24px;
-            max-height: 90vh; /* Allow it to be taller */
+            max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.15);
             animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -267,13 +387,15 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
             display: flex;
             flex-direction: column;
             gap: 14px;
+            text-align: left;
           }
-          .edit-row {
+          .form-group {
             display: flex;
             flex-direction: column;
             gap: 6px;
+            position: relative;
           }
-          .edit-row label {
+          .form-group label {
             font-size: 11px;
             font-weight: 700;
             color: #94a3b8;
@@ -281,7 +403,10 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
             letter-spacing: 0.8px;
             margin-left: 4px;
           }
-          .edit-row input {
+          .search-input {
+            position: relative;
+          }
+          input, select {
             width: 100%;
             padding: 12px 16px;
             background: #f8fafc;
@@ -292,11 +417,46 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
             color: #0f172a;
             outline: none;
             transition: all 0.2s;
+            appearance: none;
           }
-          .edit-row input:focus {
+          select {
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+          }
+          input:focus, select:focus {
             background: #ffffff;
             border-color: #3b82f6;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+          }
+          .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 16px;
+            margin-top: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            z-index: 100;
+            list-style: none;
+            padding: 8px;
+            border: 1px solid #f1f5f9;
+          }
+          .dropdown li {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 10px;
+          }
+          .dropdown li:hover {
+            background: #f8fafc;
+            color: #3b82f6;
           }
           .edit-actions {
             display: grid;
@@ -353,17 +513,9 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
             font-weight: 600;
             font-size: 16px;
           }
-          /* Custom scrollbar for modal content */
-          .modal-content::-webkit-scrollbar {
-            width: 4px;
-          }
-          .modal-content::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .modal-content::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 10px;
-          }
+          .modal-content::-webkit-scrollbar { width: 4px; }
+          .modal-content::-webkit-scrollbar-track { background: transparent; }
+          .modal-content::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.05); border-radius: 10px; }
         `}</style>
       </div>
     </div>
