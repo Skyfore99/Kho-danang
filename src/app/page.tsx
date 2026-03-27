@@ -215,15 +215,20 @@ export default function Home() {
         <LocationDetails 
           locId={selectedLocation} 
           skus={sheetData.filter(d => {
-            if (`${d.kệ}-${d.vị_trí}` !== selectedLocation) return false;
+            if (d.kệ && d.vị_trí) {
+              if (`${d.kệ}-${d.vị_trí}` !== selectedLocation) return false;
+            } else if (d.vị_trí !== selectedLocation) {
+              return false;
+            }
+            
             if (filters.mã && d.mã !== filters.mã) return false;
             if (filters.màu && d.màu !== filters.màu) return false;
             if (filters.đơn && d.đơn !== filters.đơn) return false;
             if (filters.nhóm_cỡ && d.nhóm_cỡ !== filters.nhóm_cỡ) return false;
             return true;
           })}
-
           onClose={() => setSelectedLocation(null)} 
+          onRefresh={() => fetchData(true)}
         />
       )}
 

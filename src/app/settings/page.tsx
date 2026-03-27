@@ -10,6 +10,7 @@ export default function SettingsPage() {
   const [syncStatus, setSyncStatus] = useState<"loading" | "success" | "saving" | "queued" | "done" | "idle">("loading");
   const [addingType, setAddingType] = useState<string | null>(null);
   const [newValue, setNewValue] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const groups = [
     { key: "mã", label: "MÃ (SKU)" },
@@ -21,6 +22,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const cachedSettings = localStorage.getItem("settings_data");
+    setIsAdmin(localStorage.getItem("admin_mode") === "true");
     if (cachedSettings) {
       try {
         setSettingsData(JSON.parse(cachedSettings));
@@ -34,6 +36,23 @@ export default function SettingsPage() {
       fetchData();
     }
   }, []);
+
+  const handleToggleAdmin = () => {
+    if (isAdmin) {
+      localStorage.setItem("admin_mode", "false");
+      setIsAdmin(false);
+      window.dispatchEvent(new Event("adminModeChanged"));
+    } else {
+      const pwd = prompt("Nhập mật khẩu Admin:");
+      if (pwd === "admin") {
+        localStorage.setItem("admin_mode", "true");
+        setIsAdmin(true);
+        window.dispatchEvent(new Event("adminModeChanged"));
+      } else if (pwd !== null) {
+        alert("Sai mật khẩu!");
+      }
+    }
+  };
 
   const fetchData = async (silent = false) => {
     if (!silent) setSyncStatus("loading");
@@ -115,6 +134,25 @@ export default function SettingsPage() {
     syncToCloud({ action: "addSetting", type: typeMap[typeKey] || typeLabel, value: val });
   };
 
+  const handleDelete = async (typeKey: string, typeLabel: string, val: string) => {
+    if (!confirm(`Xóa "${val}" khỏi ${typeLabel}?`)) return;
+
+    // OPTIMISTIC
+    const currentList = settingsData[typeKey] || [];
+    const newSettings = { ...settingsData, [typeKey]: currentList.filter((v: string) => v !== val) };
+    setSettingsData(newSettings);
+    localStorage.setItem("settings_data", JSON.stringify(newSettings));
+
+    const typeMap: { [key: string]: string } = {
+      "mã": "Mã",
+      "màu": "Màu",
+      "đơn": "Đơn",
+      "nhóm_cỡ": "Nhóm Cỡ",
+      "vị_trí": "Vị Trí"
+    };
+
+    syncToCloud({ action: "deleteSetting", type: typeMap[typeKey] || typeLabel, value: val });
+  };
 
 
   return (
@@ -189,11 +227,56 @@ export default function SettingsPage() {
           </div>
         ))}
 
+        <div className="setting-group admin-section">
+          <div className="group-header">
+            <h2>HỆ THỐNG</h2>
+          </div>
+          <button 
+            className={`admin-toggle-btn ${isAdmin ? 'active' : ''}`}
+            onClick={handleToggleAdmin}
+          >
+            {isAdmin ? "Tắt Chế độ Admin" : "Bật Chế độ Admin"}
+          </button>
+          <p className="admin-note">
+            {isAdmin 
+              ? "Chế độ Admin đang bật. Bạn có thể sửa dữ liệu tại chi tiết vị trí." 
+              : "Bật chế độ admin để có thể chỉnh sửa dữ liệu kho trực tiếp."}
+          </p>
+        </div>
+
         <div className="spacer"></div>
       </main>
 
       <BottomNav />
       <style jsx>{`
+        .admin-section {
+          border: 2px dashed ${isAdmin ? '#3b82f6' : '#e2e8f0'};
+          transition: all 0.3s ease;
+        }
+        .admin-toggle-btn {
+          width: 100%;
+          padding: 14px;
+          border-radius: 14px;
+          border: none;
+          font-weight: 800;
+          font-size: 14px;
+          cursor: pointer;
+          background: #f1f5f9;
+          color: #64748b;
+          transition: all 0.2s;
+        }
+        .admin-toggle-btn.active {
+          background: #3b82f6;
+          color: white;
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .admin-note {
+          font-size: 12px;
+          color: var(--text-muted);
+          margin-top: 12px;
+          text-align: center;
+          font-weight: 500;
+        }
         .mobile-wrapper {
           width: 100%;
           min-height: 100vh;

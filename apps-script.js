@@ -34,6 +34,9 @@ function doGet(e) {
         }
       });
 
+      // Include row index for easier updating
+      item.row_index = i + 1;
+
       // Special handling for old "A-A01" format in the "Kệ" column
       if (item.kệ && item.kệ.toString().includes('-') && (!item.vị_trí || item.vị_trí === "")) {
         const parts = item.kệ.split('-');
@@ -116,6 +119,37 @@ function doPost(e) {
     ]);
 
 
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === "updateKho") {
+    const sheetKho = ss.getSheetByName('Kho') || ss.insertSheet('Kho');
+    const rowIndex = parseInt(data.row_index);
+    
+    if (isNaN(rowIndex) || rowIndex < 2) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Invalid row index" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Split "A-A01" into "A" and "A01"
+    const locParts = (data.vị_trí || "").split('-');
+    const ke = locParts.length > 1 ? locParts[0] : (data.kệ || "");
+    const vitri = locParts.length > 1 ? locParts[1] : (data.vị_trí || "");
+
+    const newRow = [
+      "'" + (data.mã || ""), 
+      "'" + (data.màu || ""), 
+      data.nhóm_cỡ || "",
+      data.đơn || "", 
+      data.tháng || "",
+      "'" + ke,
+      "'" + vitri, 
+      new Date() // Update timestamp
+    ];
+
+    sheetKho.getRange(rowIndex, 1, 1, 8).setValues([newRow]);
     
     return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
       .setMimeType(ContentService.MimeType.JSON);
