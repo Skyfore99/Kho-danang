@@ -44,7 +44,7 @@ export default function SettingsPage() {
       window.dispatchEvent(new Event("adminModeChanged"));
     } else {
       const pwd = prompt("Nhập mật khẩu Admin:");
-      if (pwd === "admin") {
+      if (pwd === "123567") {
         localStorage.setItem("admin_mode", "true");
         setIsAdmin(true);
         window.dispatchEvent(new Event("adminModeChanged"));

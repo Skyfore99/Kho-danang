@@ -1,4 +1,4 @@
-export const ADMIN_PASSWORD = "admin"; // Default password as requested
+export const ADMIN_PASSWORD = "123567"; // Updated password
 
 export const isAdminMode = (): boolean => {
   if (typeof window === "undefined") return false;

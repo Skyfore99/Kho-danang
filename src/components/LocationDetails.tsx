@@ -157,160 +157,165 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 20, 50, 0.5);
-            backdrop-filter: blur(8px);
-            z-index: 2000;
+            background: rgba(255, 255, 255, 0.85); /* Increased opacity for light mode */
+            backdrop-filter: blur(20px);
+            z-index: 9999; /* Maximize z-index to stay above filters */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
           }
           .modal-content {
             background: white;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: calc(100% - 48px);
-            border-radius: 28px;
-            padding: 24px 20px;
-            max-height: 85vh;
+            position: relative; /* Changed from absolute to work with flex center */
+            width: 100%;
+            max-width: 420px;
+            border-radius: 36px;
+            padding: 32px 24px;
+            max-height: 90vh; /* Allow it to be taller */
             overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.15);
+            animation: modalPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(0,0,0,0.03);
           }
           @keyframes modalPop {
-            from { opacity: 0; margin-top: 20px; }
-            to { opacity: 1; margin-top: 0; }
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
           }
           .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            padding: 0 4px;
+            margin-bottom: 28px;
           }
           .modal-header h2 {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 800;
-            color: var(--primary-blue);
+            color: #0f172a;
             margin: 0;
+            letter-spacing: -0.8px;
           }
           .admin-badge {
             font-size: 10px;
-            background: #3b82f6;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 900;
-            margin-top: 4px;
+            background: #eff6ff;
+            color: #3b82f6;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 800;
+            margin-top: 8px;
             display: inline-block;
+            border: 1px solid #dbeafe;
           }
           .close-btn {
-            background: var(--bg-input);
+            background: #f1f5f9;
             border: none;
-            color: var(--primary-blue);
+            color: #475569;
             cursor: pointer;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
+            border-radius: 16px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            transition: all 0.2s;
           }
           .close-btn:active {
-            background: #e2e8f0;
+            transform: scale(0.92);
           }
           .details-list {
-            max-height: 440px;
-            overflow-y: auto;
-            padding-right: 4px;
-          }
-          .details-list::-webkit-scrollbar {
-            width: 4px;
-          }
-          .details-list::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.02);
-            border-radius: 4px;
-          }
-          .details-list::-webkit-scrollbar-thumb {
-            background: rgba(35, 45, 125, 0.2);
-            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
           }
           .sku-detail-card {
-            background: var(--bg-input);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 2px solid transparent;
-            transition: all 0.2s;
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 24px;
+            border: 1px solid #f1f5f9;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
             position: relative;
           }
           .sku-detail-card.editing {
             border-color: #3b82f6;
-            background: white;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 10px 30px -5px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
           }
           .edit-btn {
             width: 100%;
-            margin-top: 12px;
-            background: white;
-            border: 1px solid #e2e8f0;
+            margin-top: 16px;
+            background: #ffffff;
+            border: 1.5px solid #f1f5f9;
             color: #64748b;
-            padding: 8px;
-            border-radius: 10px;
-            font-size: 12px;
+            padding: 12px;
+            border-radius: 18px;
+            font-size: 13px;
             font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             cursor: pointer;
+            transition: all 0.2s;
+          }
+          .edit-btn:hover {
+            border-color: #e2e8f0;
+            color: #334155;
+            background: #f8fafc;
           }
           .edit-form {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 14px;
           }
           .edit-row {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
+            flex-direction: column;
+            gap: 6px;
           }
           .edit-row label {
             font-size: 11px;
-            font-weight: 800;
-            color: var(--text-muted);
-            min-width: 60px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-left: 4px;
           }
           .edit-row input {
-            flex: 1;
-            padding: 6px 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 14px;
+            width: 100%;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border: 1.5px solid #f1f5f9;
+            border-radius: 16px;
+            font-size: 16px;
             font-weight: 600;
-            color: var(--primary-blue);
+            color: #0f172a;
             outline: none;
+            transition: all 0.2s;
           }
           .edit-row input:focus {
+            background: #ffffff;
             border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
           }
           .edit-actions {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 12px;
+            margin-top: 24px;
           }
           .edit-actions button {
-            padding: 10px;
-            border-radius: 8px;
+            padding: 16px;
+            border-radius: 20px;
             border: none;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 800;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 8px;
+            transition: all 0.2s;
           }
           .cancel-btn {
             background: #f1f5f9;
@@ -319,31 +324,45 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh }: Loc
           .confirm-btn {
             background: #3b82f6;
             color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
           }
+          .confirm-btn:disabled { opacity: 0.5; }
           .detail-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             align-items: center;
           }
+          .detail-row:last-of-type { margin-bottom: 0; }
           .label {
             font-size: 11px;
-            color: var(--text-muted);
-            font-weight: 800;
+            color: #94a3b8;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
           }
           .value {
-            font-size: 15px;
-            color: var(--primary-blue);
+            font-size: 16px;
+            color: #0f172a;
             font-weight: 700;
           }
           .empty {
             text-align: center;
-            color: var(--text-muted);
-            padding: 32px 20px;
+            color: #94a3b8;
+            padding: 48px 20px;
             font-weight: 600;
-            font-size: 15px;
+            font-size: 16px;
+          }
+          /* Custom scrollbar for modal content */
+          .modal-content::-webkit-scrollbar {
+            width: 4px;
+          }
+          .modal-content::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
           }
         `}</style>
       </div>
