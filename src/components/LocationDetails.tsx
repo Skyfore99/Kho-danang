@@ -275,19 +275,18 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh, setti
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            right: 0;
+            bottom: 0;
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
             z-index: 9999;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 64px 24px 24px;
+            overflow-y: auto;
+            padding: 20px;
           }
           .modal-content {
             background: white;
             position: relative;
+            margin: 40px auto 24px;
             width: 100%;
             max-width: 420px;
             border-radius: 36px;
