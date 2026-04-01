@@ -281,9 +281,9 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh, setti
             backdrop-filter: blur(20px);
             z-index: 9999;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            padding: 20px;
+            padding: 64px 24px 24px;
           }
           .modal-content {
             background: white;
@@ -509,7 +509,7 @@ export default function LocationDetails({ locId, skus, onClose, onRefresh, setti
           .empty {
             text-align: center;
             color: #94a3b8;
-            padding: 48px 20px;
+            padding: 24px 20px;
             font-weight: 600;
             font-size: 16px;
           }
